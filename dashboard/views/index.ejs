@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DPI Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>DPI Analyzer</h1>
+      <p>Deep packet inspection over <code id="pcap-name">test_dpi.pcap</code></p>
+    </div>
+    <form id="run-form" class="run-form">
+      <button type="submit" id="run-btn">Run analysis</button>
+      <span class="status" id="status" data-state="idle">
+        <span class="status-dot"></span>
+        <span class="status-label">Idle</span>
+      </span>
+    </form>
+  </header>
+
+  <% if (error) { %>
+    <div class="banner banner-error">
+      <strong>Engine failed to run.</strong>
+      <pre><%= error %></pre>
+    </div>
+  <% } %>
+
+  <main id="dashboard" class="<%= parsed ? '' : 'is-empty' %>">
+
+    <% if (!parsed) { %>
+      <div class="empty-state">
+        <p>No run yet. Click <strong>Run analysis</strong> to process <code>test_dpi.pcap</code> through the engine.</p>
+      </div>
+    <% } %>
+
+    <section class="stat-grid" id="stat-grid">
+      <div class="stat-card" data-accent="neutral">
+        <span class="stat-value" id="stat-total"><%= parsed ? parsed.stats.totalPackets : '—' %></span>
+        <span class="stat-label">packets read</span>
+      </div>
+      <div class="stat-card" data-accent="neutral">
+        <span class="stat-value" id="stat-bytes"><%= parsed ? parsed.stats.totalBytes.toLocaleString() : '—' %></span>
+        <span class="stat-label">bytes</span>
+      </div>
+      <div class="stat-card" data-accent="flow">
+        <span class="stat-value" id="stat-forwarded"><%= parsed ? parsed.stats.forwarded : '—' %></span>
+        <span class="stat-label">forwarded</span>
+      </div>
+      <div class="stat-card" data-accent="block">
+        <span class="stat-value" id="stat-dropped"><%= parsed ? parsed.stats.dropped : '—' %></span>
+        <span class="stat-label">dropped</span>
+      </div>
+      <div class="stat-card" data-accent="neutral">
+        <span class="stat-value" id="stat-fps"><%= parsed ? parsed.meta.totalFps : '—' %></span>
+        <span class="stat-label">fast-path threads</span>
+      </div>
+    </section>
+
+    <section class="panel-grid">
+      <div class="panel">
+        <h2>Application breakdown</h2>
+        <div class="chart-wrap">
+          <canvas id="chart-apps"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Thread distribution</h2>
+        <div class="chart-wrap">
+          <canvas id="chart-threads"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Detected domains</h2>
+      <table class="domain-table" id="domain-table">
+        <thead>
+          <tr><th>Domain (SNI)</th><th>Classified as</th></tr>
+        </thead>
+        <tbody id="domain-table-body">
+          <% if (parsed) { %>
+            <% parsed.domains.forEach(function(d) { %>
+              <tr>
+                <td class="mono"><%= d.domain %></td>
+                <td><span class="app-pill"><%= d.app %></span></td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <details class="raw-panel">
+      <summary>Raw engine output</summary>
+      <pre id="raw-output"><%= parsed ? parsed.raw : '' %></pre>
+    </details>
+
+  </main>
+  <script src="/vendor/chart.js/chart.umd.min.js"></script>
+    <script>
+    window.__INITIAL_DATA__ =
+        <%- parsed ? JSON.stringify(parsed).replace(/</g, '\\u003c') : 'null' %>;
+    </script>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
