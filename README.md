@@ -192,7 +192,7 @@ Packet_analyzer/
 ## 1. Clone the Repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/imabsaar007/deep-packet-inspection
 cd Packet_analyzer
 ```
 
